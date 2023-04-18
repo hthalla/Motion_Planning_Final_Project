@@ -1,25 +1,7 @@
 import numpy as np
 import car
-
-
-# input
-# obs: [(x_min,ymin,x_max,y_max),....]
-# grid_dim: [x_min,ymin,x_max,y_max]
-# grid_size: float
-
-# output: grid[[0,0,...1,1,0],[],[]] 2d array of size m*n
-def make_grid(grid_dim,cell_size):
-    lx = abs(grid_dim[0]-grid_dim[2])
-    ly = abs(grid_dim[1]-grid_dim[3])
-    nx = int(lx/cell_size)
-    ny = int(ly/cell_size)
-    grid = [[0 for i in range(nx)] for j in range(ny)]
-
-    return grid
-
-
-car = car.Car()
-
+import grid
+from utils import *
 
 
 # inputs
@@ -41,9 +23,11 @@ def hybrid_astar(grid,start_conf,goal_conf,):
 def main():
     grid_dimension = [0,0,10,10]
     cell_size = 0.5
-    grid = make_grid(grid_dimension,cell_size)
-    print(grid)
-    print('grid shape:',len(grid),len(grid[0]))
+    car_obj = car.Car()
+    grid_env = grid.Grid(grid_dimension,cell_size) 
+    g = grid_env.make_grid()
+    print(g)
+    print('grid shape:',len(g),len(g[0]))
 
 
 
