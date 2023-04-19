@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 # output
 # path: [(x_s,y_s,th_s),(x1,y1,th1)....(x_g,y_g,th_g)]
 def hybrid_astar(grid,start_conf,goal_conf,car):
-    open_list = []
-    closed_list = []
+    open_list = PriorityQueue(order=min, f=lambda v: v.f)
+    closed_list = OrderedSet()
     init_node = start_conf
     cur_node = init_node
 
@@ -21,6 +21,17 @@ def hybrid_astar(grid,start_conf,goal_conf,car):
     
 
     return next_confs
+
+def valid_config(loc, grid_dim):
+    conf = []
+    x_min = grid_dim[0]
+    y_min = grid_dim[1]
+    x_max = grid_dim[2]
+    y_max = grid_dim[3]
+    for pt in loc:
+        if pt[0] >= x_min and pt[0] <= x_max and pt[1] >= y_min and pt[1] <= y_max:
+            conf.append(pt)            
+    return conf
 
 def main():
     grid_dimension = [0,0,10,10]
@@ -33,6 +44,7 @@ def main():
     start_c = [0,0,0]
 
     new_confs = hybrid_astar(g,start_c,[1,1,1],car_obj)
+    new_confs = valid_config(new_confs, grid_dimension)
     # new_conf_disc = 
 
     print(new_confs)
