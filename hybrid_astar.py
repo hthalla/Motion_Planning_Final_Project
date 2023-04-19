@@ -18,8 +18,7 @@ def hybrid_astar(grid,start_conf,goal_conf,car):
     cur_node = init_node
 
     next_confs = car.astar_step(cur_node)   # [(x,y,th)]
-    
-
+        
     return next_confs
 
 def main():
