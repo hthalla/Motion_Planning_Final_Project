@@ -6,27 +6,40 @@ import math
 import matplotlib.pyplot as plt
 
 
+def discr_cor(conf):
+    x = 0
+    y = 0
+    return x,y
+
 # inputs
 # grid,
 
 # output
 # path: [(x_s,y_s,th_s),(x1,y1,th1)....(x_g,y_g,th_g)]
-def hybrid_astar(grid,start_conf,goal_conf,car):
+def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
     open_list = PriorityQueue(order=min, f=lambda v: v.f)
     closed_list = OrderedSet()
     init_node = start_conf
     cur_node = init_node
-    grid_dim = [0,0,10,10]
+    # grid_dim = [xmin,ymin,xmax,ymax]
+    grid_env = grid.Grid(grid_dim,cell_size)
+    grid_discr = grid_env.make_grid()
+    
+    goal_conf_discr = discr_cor(goal_conf)
+
+
     obs = []
 
-    h = abs(goal_conf[0] - start_conf[0]) + abs(goal_conf[1] - start_conf[1])
+    h = abs(goal_conf[0] - start_conf[0]) + abs(goal_conf[1] - start_conf[1]) #manhattan dist
     g = 0
     f = g+h
 
     open_list.put(init_node, Value(f=f,g=g))
     while len(open_list) > 0:
         node,val = open_list.pop()
-        if node == goal_conf:
+        node_discr = discr_cor(node)
+
+        if node_discr == goal_conf_discr:
             closed_list.add(node)
             break
         closed_list.add(node)
@@ -39,14 +52,39 @@ def hybrid_astar(grid,start_conf,goal_conf,car):
                 continue
         else:
             safe_confs.append(next_confs[i])
-        
+
+        for i in range(len(safe_confs)):
+            if safe_confs[i] not in closed_list:
+
+                sc_x = safe_confs[i][0]
+                sc_y = safe_confs[i][1]
+                sc_g = val.g + 1 # modify 1 with steering action cost
+                sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
+                sc_f = sc_g + sc_h
+                
+                if open_list.has(safe_confs[i]):
+                    if sc_f < open_list._dict[safe_confs[i]].f:
+                        open_list._dict[safe_confs[i]].f = sc_f
+                        open_list._dict[safe_confs[i]].g = sc_g
+                        # add parent nodes in grid here
+
+                    else:
+                        open_list.put(safe_confs[i], Value(f=sc_f,g=sc_g))
+
+
+
+    
+                    
+
+
+
 
 
     next_confs = car.astar_step(cur_node)   # [(x,y,th)]
         
     return next_confs
 
-def valid_config(loc, grid_dim):
+def valid_config(loc, grid_dim): #checks if a configuration lies outside the grid
     conf = []
     x_min = grid_dim[0]
     y_min = grid_dim[1]
@@ -105,44 +143,9 @@ def main():
     cell_size = 0.5
     car_obj = car.Car()
     grid_env = grid.Grid(grid_dimension,cell_size) 
-    g = grid_env.make_grid()
-    # print(g)
-    # print('grid shape:',len(g),len(g[0]))
-    start_c = [0,0,0]
-    h = 0
-    g = 0
-    f = g+h
-
-
-    new_confs = hybrid_astar(g,start_c,[1,1,1],car_obj)
-    new_confs = valid_config(new_confs, grid_dimension)
-    
-    obs = [] ## define onbstacles here
-    safe_confs = []
-    for i in range(len(new_confs)):
-        if aabb_col(new_confs[i],obs):
-            continue
-        else:
-            safe_confs.append(new_confs[i])
-
-
-
-    print(new_confs)
-
-    print(math.degrees(new_confs[0][2]))
-    print(math.degrees(new_confs[1][2]))
-    # print(math.degrees(new_confs[2][2]))
-
-    disp = math.sqrt(new_confs[0][0]**2 + new_confs[0][1]**2)
-    print(disp)
-    # plt.scatter(start_c[0],start_c[1])
-    # plt.scatter(new_confs[0][0],new_confs[0][1])
-    # plt.scatter(new_confs[1][0],new_confs[1][1])
-    # # plt.scatter(new_confs[2][0],new_confs[2][1])
-    # plt.xlim([-10,10])
-    # plt.ylim([-10,10])
-    # plt.grid()
-    # plt.show()
+    parent_g = grid_env.make_grid()
+    print(parent_g)
+    # path = hybrid_astar(parent_g) 
 
 if __name__== main():
     main()
