@@ -35,14 +35,15 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
     grid_env = grid.Grid(grid_dim,cell_size)
     grid_discr = grid_env.make_grid()
     
+    start_conf_discr = discr_cor(goal_conf) 
     goal_conf_discr = discr_cor(goal_conf)
-
 
     obs = []
 
     h = abs(goal_conf[0] - start_conf[0]) + abs(goal_conf[1] - start_conf[1]) #manhattan dist
     g = 0
     f = g+h
+    grid_discr[start_conf_discr[0]][start_conf_discr[1]] = (start_conf,f,None)  #(config,f value, parent conf)
 
     open_list.put(init_node, Value(f=f,g=g))
     while len(open_list) > 0:
@@ -50,7 +51,7 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
         node_discr = discr_cor(node)
 
         if node_discr == goal_conf_discr:
-            closed_list.add(node)
+            closed_list.add(node_discr)    # closed list is list of discrete closed nodes 
             break
         closed_list.add(node)
 
@@ -63,8 +64,13 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
         else:
             safe_confs.append(next_confs[i])
 
+
         for i in range(len(safe_confs)):
-            if safe_confs[i] not in closed_list:
+            safe_conf_disc = discr_cor(safe_confs[i])
+            sc_d_x = safe_conf_disc[0]
+            sc_d_y = safe_conf_disc[1]
+            # if safe_confs[i] not in closed_list:
+            if safe_conf_disc not in closed_list:
 
                 sc_x = safe_confs[i][0]
                 sc_y = safe_confs[i][1]
@@ -72,21 +78,14 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
                 sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
                 sc_f = sc_g + sc_h
                 
-                if open_list.has(safe_confs[i]):
-                    if sc_f < open_list._dict[safe_confs[i]].f:
-                        open_list._dict[safe_confs[i]].f = sc_f
-                        open_list._dict[safe_confs[i]].g = sc_g
-                        # add parent nodes in grid here
-
-                    else:
-                        open_list.put(safe_confs[i], Value(f=sc_f,g=sc_g))
-
-
-
-    
-                    
-
-
+                # if open_list.has(safe_confs[i]):
+                if grid_discr[sc_d_x][sc_d_y] != 0:
+                    if sc_f < grid_discr[sc_d_x][sc_d_y][1]:
+                        grid_discr[sc_d_x][sc_d_y] = (safe_confs[i],f,node) #(config,f value, parent conf)
+                        
+                else:
+                    open_list.put(safe_confs[i], Value(f=sc_f,g=sc_g))
+                    grid_discr[sc_d_x][sc_d_y] = (safe_confs[i],f,node) #(config,f value, parent conf)
 
 
 
