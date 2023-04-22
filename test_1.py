@@ -13,7 +13,7 @@ def discr_cor(safe_confs, cell_size=0.5):
         
     return (ds_x, ds_y)
 
-x,y = discr_cor((0.6,1.1))
+x,y = discr_cor((0,0.5))
 
 print(x)
 print(y)
