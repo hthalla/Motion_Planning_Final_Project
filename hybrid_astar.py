@@ -19,7 +19,7 @@ def hybrid_astar(grid,start_conf,goal_conf,car):
     grid_dim = [0,0,10,10]
     obs = []
 
-    h = 0
+    h = abs(goal_conf[0] - start_conf[0]) + abs(goal_conf[1] - start_conf[1])
     g = 0
     f = g+h
 
