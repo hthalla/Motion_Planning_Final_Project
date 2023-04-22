@@ -25,12 +25,12 @@ v = env.vehicle.make_on_lane(env.road, lane, 4, speed=0)
 env.road.vehicles.append(v)
 
 # Ego vehicle position can be changed as below
-env.road.vehicles[0].heading = 0
-env.road.vehicles[0].position = np.array([5, 5])
+env.road.vehicles[0].heading = 0.0
+env.road.vehicles[0].position = np.array([5.0, 5.0])
 
 # Parked vehicles can be changed as below
-env.road.vehicles[1].heading = 0
-env.road.vehicles[1].position = np.array([-2, -2])
+env.road.vehicles[1].heading = 0.0
+env.road.vehicles[1].position = np.array([-2.0, -2.0])
 
 # Controll actions
 action = [0.1, 0.1]  # acceleration, steering
