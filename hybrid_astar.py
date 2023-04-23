@@ -35,10 +35,12 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
     grid_env = grid.Grid(grid_dim,cell_size)
     grid_discr = grid_env.make_grid()
     
+    
     start_conf_discr = discr_cor(goal_conf) 
     goal_conf_discr = discr_cor(goal_conf)
 
-    obs = []
+    obs = [[6,0,8,1],[20,2.5,25,5],[20,10,25,15]]
+    open = []
 
     h = abs(goal_conf[0] - start_conf[0]) + abs(goal_conf[1] - start_conf[1]) #manhattan dist
     g = 0
@@ -46,7 +48,12 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
     grid_discr[start_conf_discr[0]][start_conf_discr[1]] = (start_conf,f,None)  #(config,f value, parent conf)
 
     open_list.put(init_node, Value(f=f,g=g))
-    while len(open_list) > 0:
+    open.append(init_node)
+    k = 0
+    while open_list.__len__() > 0:
+        k = k+1
+        print(k)
+
         node,val = open_list.pop()
         node_discr = discr_cor(node)
 
@@ -57,18 +64,21 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
 
         next_confs = car.astar_step(node)    
         next_confs = valid_config(next_confs, grid_dim)
+        # print(next_confs)
         safe_confs = []
-        for i in range(len(next_confs)):
-            if aabb_col(next_confs[i],obs):
-                continue
-        else:
-            safe_confs.append(next_confs[i])
+        if len(next_confs)>0:
+            for i in range(len(next_confs)):
+                if aabb_col(next_confs[i],obs):
+                    continue
+                else:
+                    safe_confs.append(next_confs[i])
 
-
+        print(safe_confs)
         for i in range(len(safe_confs)):
             safe_conf_disc = discr_cor(safe_confs[i])
             sc_d_x = safe_conf_disc[0]
             sc_d_y = safe_conf_disc[1]
+            print('discr safe conf',sc_d_x,sc_d_y)
             # if safe_confs[i] not in closed_list:
             if safe_conf_disc not in closed_list:
 
@@ -76,6 +86,7 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
                 sc_y = safe_confs[i][1]
                 sc_g = val.g + 1 # modify 1 with steering action cost
                 sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
+                sc_h = 0
                 sc_f = sc_g + sc_h
                 
                 # if open_list.has(safe_confs[i]):
@@ -86,12 +97,12 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
                 else:
                     open_list.put(safe_confs[i], Value(f=sc_f,g=sc_g))
                     grid_discr[sc_d_x][sc_d_y] = (safe_confs[i],f,node) #(config,f value, parent conf)
+                    open.append(safe_confs[i])
 
-
-
+    
     next_confs = car.astar_step(cur_node)   # [(x,y,th)]
-        
-    return next_confs
+    # print(grid_discr)   
+    return closed_list._container
 
 def valid_config(loc, grid_dim): #checks if a configuration lies outside the grid
     conf = []
@@ -104,7 +115,7 @@ def valid_config(loc, grid_dim): #checks if a configuration lies outside the gri
             conf.append(pt)            
     return conf
 
-def aabb(conf,l,w):
+def aabb(conf,l=2,w=1):
     x = conf[0]
     y = conf[1]
     th = conf[2]
@@ -135,10 +146,10 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
     
     rob_xmin,rob_ymin,rob_xmax,rob_ymax = aabb(conf)
     for j in range(len(obs)):
-        o_xmin = obs[0]
-        o_ymin = obs[1]
-        o_xmax = obs[2]
-        o_ymax = obs[3]
+        o_xmin = obs[j][0]
+        o_ymin = obs[j][1]
+        o_xmax = obs[j][2]
+        o_ymax = obs[j][3]
 
         if rob_xmin <= o_xmax and rob_xmax>= o_xmin:
             if rob_ymin <= o_ymax and rob_ymax >= o_ymin:
@@ -148,13 +159,21 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
     
 
 def main():
-    grid_dimension = [0,0,10,10]
-    cell_size = 0.5
+    grid_dimension = [0,0,30,30]
+    cell_size = 0.1
     car_obj = car.Car()
     grid_env = grid.Grid(grid_dimension,cell_size) 
     parent_g = grid_env.make_grid()
-    print(parent_g)
-    # path = hybrid_astar(parent_g) 
+    start_conf = (0,10,30)
+    goal_conf = (5,5,0)
+    print(len(parent_g))
+    path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj)
+    print(path) 
+    for i in range(len(path)):
+        plt.plot(path[i][0],path[i][1],'o')
+        # plt.pause(0.1)
+    plt.show()
+    plt.grid (True) 
 
 if __name__== main():
     main()

@@ -2,7 +2,7 @@ import numpy as np
 from math import *
 
 class Car():
-    def __init__(self,l=2,w=1,max_phi=pi/6,v=1):
+    def __init__(self,l=2,w=1,max_phi=pi/3,v=1):
         self.l = l
         self.w = w
         self.v = v
@@ -22,6 +22,6 @@ class Car():
             xn = x + self.v*cos(actions[i])*dt
             yn = y + self.v*sin(actions[i])*dt
             thn = th + (self.v/self.l)*tan(actions[i])*dt
-            next_confs.append([xn,yn,thn])
+            next_confs.append((xn,yn,thn))
 
         return next_confs
