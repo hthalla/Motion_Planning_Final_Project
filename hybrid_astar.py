@@ -182,13 +182,13 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
 
 def main():
     grid_dimension = [0,0,60,60]
-    cell_size = 0.5
+    cell_size = 1
     car_obj = car.Car()
     # grid_env = grid.Grid(grid_dimension,cell_size) 
     # parent_g = grid_env.make_grid()
     start_conf = (0,0,0)
-    goal_conf = (40,25,1)
-    obs = [[6,0,10,5],[20,2.5,25,5],[20,10,25,15]]
+    goal_conf = (50,50,1)
+    obs = [[6,0,10,5],[20,2.5,25,5],[20,10,25,15],[30,30,40,40]]
     path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
     # print(path) 
 
