@@ -26,7 +26,7 @@ def discr_cor(safe_confs, cell_size=0.5):
 
 # output
 # path: [(x_s,y_s,th_s),(x1,y1,th1)....(x_g,y_g,th_g)]
-def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
+def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
     open_list = PriorityQueue(order=min, f=lambda v: v.f)
     closed_list = OrderedSet()
     init_node = start_conf
@@ -34,36 +34,52 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
     # grid_dim = [xmin,ymin,xmax,ymax]
     grid_env = grid.Grid(grid_dim,cell_size)
     grid_discr = grid_env.make_grid()
+    print('discritized grid size:',len(grid_discr),len(grid_discr[0]))
     
     
-    start_conf_discr = discr_cor(goal_conf) 
-    goal_conf_discr = discr_cor(goal_conf)
+    start_conf_discr = discr_cor(start_conf,cell_size) 
+    print('discretized start conf:',start_conf_discr)
+    goal_conf_discr = discr_cor(goal_conf,cell_size)
+    print('discretized goal conf:',goal_conf_discr)
 
-    obs = [[6,0,8,1],[20,2.5,25,5],[20,10,25,15]]
     open = []
+    closed = []
 
     h = abs(goal_conf[0] - start_conf[0]) + abs(goal_conf[1] - start_conf[1]) #manhattan dist
     g = 0
     f = g+h
     grid_discr[start_conf_discr[0]][start_conf_discr[1]] = (start_conf,f,None)  #(config,f value, parent conf)
-
+    # print(grid_discr)
+    # print(grid_discr[start_conf_discr[0]][start_conf_discr[1]])
+    
+    
     open_list.put(init_node, Value(f=f,g=g))
+    # print(open_list._dict)
     open.append(init_node)
+    
     k = 0
     while open_list.__len__() > 0:
+    # for i in range(30):
         k = k+1
-        print(k)
+        # print(k)
 
         node,val = open_list.pop()
-        node_discr = discr_cor(node)
-
+        node_discr = discr_cor(node,cell_size)
+        closed.append(node[:2])
+        # print('popped node:',node)
+        print('discr node:',node_discr)
+        print('discr goal conf:',goal_conf_discr)
+        
         if node_discr == goal_conf_discr:
             closed_list.add(node_discr)    # closed list is list of discrete closed nodes 
+            print('goal reached')
             break
-        closed_list.add(node)
+        closed_list.add(node_discr)
 
         next_confs = car.astar_step(node)    
         next_confs = valid_config(next_confs, grid_dim)
+
+
         # print(next_confs)
         safe_confs = []
         if len(next_confs)>0:
@@ -73,36 +89,42 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car):
                 else:
                     safe_confs.append(next_confs[i])
 
-        print(safe_confs)
+        # print(safe_confs)
         for i in range(len(safe_confs)):
-            safe_conf_disc = discr_cor(safe_confs[i])
+            safe_conf_disc = discr_cor(safe_confs[i],cell_size)
             sc_d_x = safe_conf_disc[0]
             sc_d_y = safe_conf_disc[1]
-            print('discr safe conf',sc_d_x,sc_d_y)
+            # print('safe conf',safe_confs[i])
+            # print('safe conf discr', sc_d_x,sc_d_y)
+            # print('discr safe conf',sc_d_x,sc_d_y)
             # if safe_confs[i] not in closed_list:
-            if safe_conf_disc not in closed_list:
+            if safe_conf_disc not in closed_list._container:
 
                 sc_x = safe_confs[i][0]
                 sc_y = safe_confs[i][1]
                 sc_g = val.g + 1 # modify 1 with steering action cost
                 sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
-                sc_h = 0
+                sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
+                # sc_h = 0
                 sc_f = sc_g + sc_h
+                # sc_f = 0
                 
                 # if open_list.has(safe_confs[i]):
-                if grid_discr[sc_d_x][sc_d_y] != 0:
-                    if sc_f < grid_discr[sc_d_x][sc_d_y][1]:
+                if sc_d_x < len(grid_discr) and sc_d_y < len(grid_discr[0]): 
+                    if grid_discr[sc_d_x][sc_d_y] != 0:
+                        if sc_f < grid_discr[sc_d_x][sc_d_y][1]:
+                            grid_discr[sc_d_x][sc_d_y] = (safe_confs[i],f,node) #(config,f value, parent conf)
+                            
+                    else:
+                        open_list.put(safe_confs[i], Value(f=sc_f,g=sc_g))
                         grid_discr[sc_d_x][sc_d_y] = (safe_confs[i],f,node) #(config,f value, parent conf)
-                        
-                else:
-                    open_list.put(safe_confs[i], Value(f=sc_f,g=sc_g))
-                    grid_discr[sc_d_x][sc_d_y] = (safe_confs[i],f,node) #(config,f value, parent conf)
-                    open.append(safe_confs[i])
+                        open.append(safe_confs[i])
 
     
     next_confs = car.astar_step(cur_node)   # [(x,y,th)]
-    # print(grid_discr)   
-    return closed_list._container
+    print(len(closed))
+    # print(grid_discr)
+    return open
 
 def valid_config(loc, grid_dim): #checks if a configuration lies outside the grid
     conf = []
@@ -159,21 +181,59 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
     
 
 def main():
-    grid_dimension = [0,0,30,30]
-    cell_size = 0.1
+    grid_dimension = [0,0,60,60]
+    cell_size = 0.5
     car_obj = car.Car()
-    grid_env = grid.Grid(grid_dimension,cell_size) 
-    parent_g = grid_env.make_grid()
-    start_conf = (0,10,30)
-    goal_conf = (5,5,0)
-    print(len(parent_g))
-    path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj)
-    print(path) 
+    # grid_env = grid.Grid(grid_dimension,cell_size) 
+    # parent_g = grid_env.make_grid()
+    start_conf = (0,0,0)
+    goal_conf = (40,25,1)
+    obs = [[6,0,10,5],[20,2.5,25,5],[20,10,25,15]]
+    path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
+    # print(path) 
+
+    xmin = -1
+    ymin = -1
+    xmax = 61
+    ymax = 61
+    width = xmax - xmin
+    height = ymax - ymin
+    rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='none')
+    plt.gca().add_patch(rect)
+    plt.grid()
+
+    ang1 = start_conf[2]
+    x1 = start_conf[0]
+    y1 = start_conf[1]
+    arrow_end_x1 = 3 * np.cos(ang1)
+    arrow_end_y1 = 3 * np.sin(ang1)
+    plt.arrow(x1,y1,arrow_end_x1,arrow_end_y1,width =0.5, head_width=1, head_length=1,color='black')
+
+    ang2 = goal_conf[2]
+    x2 = goal_conf[0]
+    y2 = goal_conf[1]
+    arrow_end_x2 = 3 * np.cos(ang2)
+    arrow_end_y2 = 3 * np.sin(ang2)
+    plt.arrow(x2,y2,arrow_end_x2,arrow_end_y2,width =0.5, head_width=1, head_length=1,color='green')
+
+
+    for i in range(len(obs)):
+        xmin = obs[i][0]
+        ymin = obs[i][1]
+        xmax = obs[i][2]
+        ymax = obs[i][3]
+        width = xmax - xmin
+        height = ymax - ymin
+        rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='r')
+        plt.gca().add_patch(rect)
+
     for i in range(len(path)):
-        plt.plot(path[i][0],path[i][1],'o')
-        # plt.pause(0.1)
+        plt.plot(path[i][0],path[i][1],'.')
+        plt.pause(0.0001)
+    
     plt.show()
-    plt.grid (True) 
+
+
 
 if __name__== main():
     main()
