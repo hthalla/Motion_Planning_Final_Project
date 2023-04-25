@@ -38,10 +38,11 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
     
     
     start_conf_discr = discr_cor(start_conf,cell_size) 
-    print('discretized start conf:',start_conf_discr)
+    # print('discretized start conf:',start_conf_discr)
     goal_conf_discr = discr_cor(goal_conf,cell_size)
-    print('discretized goal conf:',goal_conf_discr)
+    # print('discretized goal conf:',goal_conf_discr)
 
+    reached_goal = False
     open = []
     closed = []
 
@@ -67,11 +68,12 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
         node_discr = discr_cor(node,cell_size)
         closed.append(node[:2])
         # print('popped node:',node)
-        print('discr node:',node_discr)
-        print('discr goal conf:',goal_conf_discr)
+        # print('discr node:',node_discr)
+        # print('discr goal conf:',goal_conf_discr)
         
         if node_discr == goal_conf_discr:
             closed_list.add(node_discr)    # closed list is list of discrete closed nodes 
+            reached_goal = True
             print('goal reached')
             break
         closed_list.add(node_discr)
@@ -103,7 +105,7 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
                 sc_x = safe_confs[i][0]
                 sc_y = safe_confs[i][1]
                 sc_g = val.g + 1 # modify 1 with steering action cost
-                sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
+                # sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
                 sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
                 # sc_h = 0
                 sc_f = sc_g + sc_h
@@ -121,10 +123,23 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
                         open.append(safe_confs[i])
 
     
-    next_confs = car.astar_step(cur_node)   # [(x,y,th)]
-    print(len(closed))
-    # print(grid_discr)
-    return open
+    path = []
+
+    if reached_goal:
+        last_node = grid_discr[goal_conf_discr[0]][goal_conf_discr[1]][0]
+        while discr_cor(last_node,cell_size) != start_conf_discr:
+            last_node_discr = discr_cor(last_node,cell_size)
+            parent_node = grid_discr[last_node_discr[0]][last_node_discr[1]][2]
+            # print(last_node,parent_node)
+            path.insert(0,last_node)
+            last_node = parent_node
+
+    # else: 
+    #     print('Path not found')
+    #     last_node = 
+    #     path.insert(grid_discr[])
+
+    return open, path
 
 def valid_config(loc, grid_dim): #checks if a configuration lies outside the grid
     conf = []
@@ -182,14 +197,12 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
 
 def main():
     grid_dimension = [0,0,60,60]
-    cell_size = 1
+    cell_size = 0.5
     car_obj = car.Car()
-    # grid_env = grid.Grid(grid_dimension,cell_size) 
-    # parent_g = grid_env.make_grid()
-    start_conf = (0,0,0)
-    goal_conf = (50,50,1)
-    obs = [[6,0,10,5],[20,2.5,25,5],[20,10,25,15],[30,30,40,40]]
-    path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
+    start_conf = (0,10,0)
+    goal_conf = (50,40,0)
+    obs = [[6,0,10,15],[6,22,10,40],[20,2.5,25,5],[20,10,25,15],[30,30,40,40]]
+    open, path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
     # print(path) 
 
     xmin = -1
@@ -207,7 +220,7 @@ def main():
     y1 = start_conf[1]
     arrow_end_x1 = 3 * np.cos(ang1)
     arrow_end_y1 = 3 * np.sin(ang1)
-    plt.arrow(x1,y1,arrow_end_x1,arrow_end_y1,width =0.5, head_width=1, head_length=1,color='black')
+    plt.arrow(x1,y1,arrow_end_x1,arrow_end_y1,width =0.5, head_width=1, head_length=1,color='red')
 
     ang2 = goal_conf[2]
     x2 = goal_conf[0]
@@ -227,10 +240,18 @@ def main():
         rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='r')
         plt.gca().add_patch(rect)
 
-    for i in range(len(path)):
-        plt.plot(path[i][0],path[i][1],'.')
+    for i in range(len(open)):
+        plt.plot(open[i][0],open[i][1],'.')
         plt.pause(0.0001)
-    
+
+    for i in range(len(path)):
+        ang = path[i][2]
+        x = path[i][0]
+        y = path[i][1]
+        arrow_end_x = 3 * np.cos(ang)
+        arrow_end_y = 3 * np.sin(ang)
+        plt.arrow(x,y,arrow_end_x,arrow_end_y,width =0.5, head_width=1, head_length=1,color='blue')
+        plt.pause(0.0001)
     plt.show()
 
 
