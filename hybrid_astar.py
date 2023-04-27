@@ -197,11 +197,11 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
 
 def main():
     grid_dimension = [0,0,60,60]
-    cell_size = 0.5
+    cell_size = 1
     car_obj = car.Car()
-    start_conf = (0,10,0)
-    goal_conf = (50,40,0)
-    obs = [[6,0,10,15],[6,22,10,40],[20,2.5,25,5],[20,10,25,15],[30,30,40,40]]
+    start_conf = (5,0,3*np.pi/4)
+    goal_conf = (35,25,np.pi/4)
+    obs = [[6,0,10,15],[6,22,10,40],[20,2.5,25,5],[20,10,25,15],[30,30,40,40],[18,18,25,35]]
     open, path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
     # print(path) 
 
@@ -244,14 +244,19 @@ def main():
         plt.plot(open[i][0],open[i][1],'.')
         plt.pause(0.0001)
 
-    for i in range(len(path)):
-        ang = path[i][2]
-        x = path[i][0]
-        y = path[i][1]
-        arrow_end_x = 3 * np.cos(ang)
-        arrow_end_y = 3 * np.sin(ang)
-        plt.arrow(x,y,arrow_end_x,arrow_end_y,width =0.5, head_width=1, head_length=1,color='blue')
-        plt.pause(0.0001)
+    for i in range(len(path)-1):
+        x_curve, y_curve = ([path[i][0],path[i+1][0]],[path[i][1],path[i+1][1]])
+        plt.plot(x_curve,y_curve,'g')
+        plt.pause(0.1)
+
+    # for i in range(len(path)):
+    #     ang = path[i][2]
+    #     x = path[i][0]
+    #     y = path[i][1]
+    #     arrow_end_x = 3 * np.cos(ang)
+    #     arrow_end_y = 3 * np.sin(ang)
+    #     plt.arrow(x,y,arrow_end_x,arrow_end_y,width =0.5, head_width=1, head_length=1,color='blue')
+    #     plt.pause(0.1)
     plt.show()
 
 

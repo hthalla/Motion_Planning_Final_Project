@@ -27,5 +27,6 @@ for i in range(len(total_confs)):
     arrow_end_x1 = 0.5 * np.cos(ang1)
     arrow_end_y1 = 0.5 * np.sin(ang1)
     plt.arrow(x1,y1,arrow_end_x1,arrow_end_y1,head_width=0.1, head_length=0.1)
+    plt.grid
     # plt.pause(0.1)
 plt.show()
