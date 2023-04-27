@@ -47,9 +47,9 @@ class ForwardShooting():
         total_cost = 0
         for action in actions:
             obs, _, _, _, _ = self.env.step(action)
-            cost = np.sqrt((obs['observation'][0] - self.goal[0])**2 +
-                           (obs['observation'][1] - self.goal[1])**2 +
-                           (obs['observation'][2] - self.goal[2])**2)
+            cost = ((obs['observation'][0] - self.goal[0])**2 +
+                    (obs['observation'][1] - self.goal[1])**2 +
+                    (obs['observation'][2] - self.goal[2])**2)
             total_cost += cost  # Cumulative sum of costs calculation
             # self.env.render()
 
