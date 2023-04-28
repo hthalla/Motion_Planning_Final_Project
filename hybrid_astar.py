@@ -99,10 +99,7 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
             safe_conf_disc = discr_cor(safe_confs[i],cell_size)
             sc_d_x = safe_conf_disc[0]
             sc_d_y = safe_conf_disc[1]
-            # print('safe conf',safe_confs[i])
-            # print('safe conf discr', sc_d_x,sc_d_y)
-            # print('discr safe conf',sc_d_x,sc_d_y)
-            # if safe_confs[i] not in closed_list:
+
             if safe_conf_disc not in closed_list._container:
 
                 sc_x = safe_confs[i][0]
@@ -110,9 +107,8 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
                 sc_g = val.g + 1 # modify 1 with steering action cost
                 sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
                 # sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
-                # sc_h = 0
+                
                 sc_f = sc_g + sc_h
-                # sc_f = 0
                 
                 if sc_h < 0.8*h:
                     dub_path, dub_len = dubin_path(safe_confs[i],goal_conf)
@@ -140,7 +136,7 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
                                 path.insert(0,last_node)
                                 last_node = parent_node
                             
-                            return path, path2
+                            return path, path2, open
                 
                 if sc_d_x < len(grid_discr) and sc_d_y < len(grid_discr[0]): 
                     if grid_discr[sc_d_x][sc_d_y] != 0:
@@ -163,12 +159,6 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
             # print(last_node,parent_node)
             path.insert(0,last_node)
             last_node = parent_node
-
-    # path = path + dub_path[1:]
-    # else: 
-    #     print('Path not found')
-    #     last_node = 
-    #     path.insert(grid_discr[])
 
     return open, path
 
@@ -224,30 +214,35 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
              return True
             
     return False
-    
+
+
 
 def main():
-    grid_dimension = [0,0,60,60]
+    grid_dimension = [0,0,70,42]
     cell_size = 1
     car_obj = car.Car()
     start_conf = (5,0,3*np.pi/4)
-    goal_conf = (42,42,-3*np.pi/4)
-    obs = [[6,0,10,15],[6,22,10,40],[20,2.5,25,5],[30,30,40,40],[18,20,25,35]]
-    open, path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
+    goal_conf = (46.5,5,-np.pi/2)
+    # obs = [[6,0,10,15],[15,0,20,18],[6,22,10,40],[20,2.5,25,5],[30,30,40,40],[18,20,25,35]]
+    obs = [[8,2,8.5,10],[12.5,2,13,10],[17,2,17.5,10],[21.5,2,22,10],[26,2,26.5,10]
+           ,[30.5,2,31,10],[35,2,35.5,10],[39.5,2,40,10],[44,2,44.5,10],[48.5,2,49,10]] #[44,2,44.5,10]
+
+    path_astar, path_dub, open = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
     # path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
 
-    # print(path) 
-
+ 
+    # plot boundary
     xmin = -1
     ymin = -1
-    xmax = 61
-    ymax = 61
+    xmax = 71
+    ymax = 42
     width = xmax - xmin
     height = ymax - ymin
     rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='none')
     plt.gca().add_patch(rect)
     plt.grid()
 
+    # plot start and end configuration
     ang1 = start_conf[2]
     x1 = start_conf[0]
     y1 = start_conf[1]
@@ -263,6 +258,7 @@ def main():
     plt.arrow(x2,y2,arrow_end_x2,arrow_end_y2,width =0.5, head_width=1, head_length=1,color='green')
 
 
+    # plotting obstacles
     for i in range(len(obs)):
         xmin = obs[i][0]
         ymin = obs[i][1]
@@ -273,30 +269,24 @@ def main():
         rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='r')
         plt.gca().add_patch(rect)
 
-    # for i in range(len(open)):
-    #     plt.plot(open[i][0],open[i][1],'.')
-    #     plt.pause(0.0001)
-    open.append(path[0])
-    for i in range(len(open)-1):
-        x_curve, y_curve = ([open[i][0],open[i+1][0]],[open[i][1],open[i+1][1]])
+    for i in range(len(open)):
+        plt.plot(open[i][0],open[i][1],'.')
+        plt.pause(0.0001)
+
+    # plot Hybrid Astar path
+    path_astar.append(path_dub[0])
+    for i in range(len(path_astar)-1):
+        x_curve, y_curve = ([path_astar[i][0],path_astar[i+1][0]],[path_astar[i][1],path_astar[i+1][1]])
         plt.plot(x_curve,y_curve,'r')
         plt.pause(0.1)
 
-    for i in range(len(path)-1):
-        x_curve, y_curve = ([path[i][0],path[i+1][0]],[path[i][1],path[i+1][1]])
+    # plot Dubins path
+    for i in range(len(path_dub)-1):
+        x_curve, y_curve = ([path_dub[i][0],path_dub[i+1][0]],[path_dub[i][1],path_dub[i+1][1]])
         plt.plot(x_curve,y_curve,'g')
         plt.pause(0.1)
 
-    # for i in range(len(path)):
-    #     ang = path[i][2]
-    #     x = path[i][0]
-    #     y = path[i][1]
-    #     arrow_end_x = 3 * np.cos(ang)
-    #     arrow_end_y = 3 * np.sin(ang)
-    #     plt.arrow(x,y,arrow_end_x,arrow_end_y,width =0.5, head_width=1, head_length=1,color='blue')
-    #     plt.pause(0.1)
     plt.show()
-
 
 
 if __name__== main():

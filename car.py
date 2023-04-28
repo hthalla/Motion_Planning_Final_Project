@@ -2,7 +2,7 @@ import numpy as np
 from math import *
 
 class Car():
-    def __init__(self,l=2,w=1,max_phi=pi/6,v=2,dt=1):
+    def __init__(self,l=5,w=3,max_phi=pi/3,v=2,dt=1):
         self.l = l
         self.w = w
         self.v = v

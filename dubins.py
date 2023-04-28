@@ -182,7 +182,7 @@ def generate_course(length, mode, c):
     return px, py, pyaw
 
 def dubin_path(start, end):  ### Add the angle either in np or theta 
-    curvature = math.tan(np.deg2rad(30))/2
+    curvature = math.tan(np.deg2rad(15))/2
     px, py, pyaw, mode, clen = dubins_path_planning(start, end, curvature)
     
     pyaw_2pi = []
