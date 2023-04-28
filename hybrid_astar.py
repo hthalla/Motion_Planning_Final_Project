@@ -46,8 +46,8 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
     open = []
     closed = []
 
-    # h =  np.sqrt((goal_conf[0]-start_conf[0])**2 + (goal_conf[1]-start_conf[1])**2) # eucl dist
-    h = abs(goal_conf[0]-start_conf[0]) + abs(goal_conf[1]-start_conf[0])
+    h =  np.sqrt((goal_conf[0]-start_conf[0])**2 + (goal_conf[1]-start_conf[1])**2) # eucl dist
+    # h = abs(goal_conf[0]-start_conf[0]) + abs(goal_conf[1]-start_conf[0])
     g = 0
     f = g+h
     grid_discr[start_conf_discr[0]][start_conf_discr[1]] = (start_conf,f,None)  #(config,f value, parent conf)
@@ -104,13 +104,22 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
 
                 sc_x = safe_confs[i][0]
                 sc_y = safe_confs[i][1]
-                sc_g = val.g + 1 # modify 1 with steering action cost
-                sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
-                # sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
+                sc_th = safe_confs[i][2]
+                if sc_th != node[2]:
+                    st_c = 0.5
+                else:
+                    st_c = 0.1
                 
-                sc_f = sc_g + sc_h
+                # st_c = 0
+
+                sc_g = val.g + st_c # modify 1 with steering action cost
+                # sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
+                sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
                 
-                if sc_h < 0.8*h:
+                sc_f = sc_g + sc_h 
+                
+                # sc_h < 0.9*h
+                if True:
                     dub_path, dub_len = dubin_path(safe_confs[i],goal_conf)
                     dub_valid = valid_config(dub_path,grid_dim)
                     col_check = False
@@ -173,7 +182,7 @@ def valid_config(loc, grid_dim): #checks if a configuration lies outside the gri
             conf.append(pt)            
     return conf
 
-def aabb(conf,l=2,w=1):
+def aabb(conf,l=5,w=2):
     x = conf[0]
     y = conf[1]
     th = conf[2]
@@ -215,22 +224,46 @@ def aabb_col(conf,obs):     # obs = [[xmin,ymin,xmax,ymax],...]
             
     return False
 
+def plot_car(x, y, theta, length=5, width=2):
 
+    # Define the four corners of the car with respect to the rear axle center
+    x_corners = [0, length, length, 0]
+    y_corners = [-width/2, -width/2, width/2, width/2]
+    
+    # Rotate the car by theta radians
+    cos_theta = np.cos(theta)
+    sin_theta = np.sin(theta)
+    x_corners_rot = [x_corners[i]*cos_theta - y_corners[i]*sin_theta for i in range(4)]
+    y_corners_rot = [x_corners[i]*sin_theta + y_corners[i]*cos_theta for i in range(4)]
+    
+    # Translate the car to the desired location
+    x_corners_trans = [x + x_corners_rot[i] for i in range(4)]
+    y_corners_trans = [y + y_corners_rot[i] for i in range(4)]
+    
+    return x_corners_trans, y_corners_trans
+    
+    # Plot the car
+    
 
 def main():
     grid_dimension = [0,0,70,42]
-    cell_size = 1
+    cell_size = 0.5
     car_obj = car.Car()
-    start_conf = (5,0,3*np.pi/4)
+    start_conf = (5,20,0)
     goal_conf = (46.5,5,-np.pi/2)
+    # goal_conf = (40,20,0.1)
     # obs = [[6,0,10,15],[15,0,20,18],[6,22,10,40],[20,2.5,25,5],[30,30,40,40],[18,20,25,35]]
     obs = [[8,2,8.5,10],[12.5,2,13,10],[17,2,17.5,10],[21.5,2,22,10],[26,2,26.5,10]
-           ,[30.5,2,31,10],[35,2,35.5,10],[39.5,2,40,10],[44,2,44.5,10],[48.5,2,49,10]] #[44,2,44.5,10]
+           ,[30.5,2,31,10],[35,2,35.5,10],[39.5,2,40,10],[48.5,2,49,10]] #[44,2,44.5,10]
 
     path_astar, path_dub, open = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
     # path = hybrid_astar(grid_dimension,cell_size,start_conf,goal_conf,car_obj,obs)
+    
+    path_astar.append(path_dub[0])
+    path_astar.insert(0,start_conf)
+    total_path = []
+    total_path = path_astar + path_dub
 
- 
     # plot boundary
     xmin = -1
     ymin = -1
@@ -269,12 +302,13 @@ def main():
         rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='r')
         plt.gca().add_patch(rect)
 
-    for i in range(len(open)):
-        plt.plot(open[i][0],open[i][1],'.')
-        plt.pause(0.0001)
+    # for i in range(len(open)):
+    #     plt.plot(open[i][0],open[i][1],'.')
+    #     plt.pause(0.0001)
 
     # plot Hybrid Astar path
-    path_astar.append(path_dub[0])
+    
+    
     for i in range(len(path_astar)-1):
         x_curve, y_curve = ([path_astar[i][0],path_astar[i+1][0]],[path_astar[i][1],path_astar[i+1][1]])
         plt.plot(x_curve,y_curve,'r')
@@ -285,6 +319,15 @@ def main():
         x_curve, y_curve = ([path_dub[i][0],path_dub[i+1][0]],[path_dub[i][1],path_dub[i+1][1]])
         plt.plot(x_curve,y_curve,'g')
         plt.pause(0.1)
+
+    for i in range(len(total_path)):
+        x = total_path[i][0]
+        y = total_path[i][1]
+        th = total_path[i][2]
+        x_corners, y_corners = plot_car(x,y,th)
+        plt.plot(x_corners + [x_corners[0]], y_corners + [y_corners[0]],'k')
+        plt.pause(0.1)
+        # plt.show()
 
     plt.show()
 
