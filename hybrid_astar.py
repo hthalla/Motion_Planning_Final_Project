@@ -249,7 +249,7 @@ def main():
     grid_dimension = [0,0,70,42]
     cell_size = 0.5
     car_obj = car.Car()
-    start_conf = (5,20,0)
+    start_conf = (35,30,-np.pi/4)
     goal_conf = (46.5,5,-np.pi/2)
     # goal_conf = (40,20,0.1)
     # obs = [[6,0,10,15],[15,0,20,18],[6,22,10,40],[20,2.5,25,5],[30,30,40,40],[18,20,25,35]]
@@ -302,9 +302,9 @@ def main():
         rect = plt.Rectangle((xmin, ymin), width, height, linewidth=1, edgecolor='k', facecolor='r')
         plt.gca().add_patch(rect)
 
-    # for i in range(len(open)):
-    #     plt.plot(open[i][0],open[i][1],'.')
-    #     plt.pause(0.0001)
+    for i in range(len(open)):
+        plt.plot(open[i][0],open[i][1],'.')
+        plt.pause(0.0001)
 
     # plot Hybrid Astar path
     
