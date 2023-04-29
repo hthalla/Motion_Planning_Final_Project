@@ -85,19 +85,16 @@ class DirectCollocation():
             init_states_actions[:3] = np.array(list(self.start))
 
             # Initializing x
-            init_states_actions[3:self.horizon*self.num_states][::3] = \
-                np.random.uniform(low=self.start[0]-5, high=self.start[0]+5,
-                                  size=((self.horizon-1),))
+            init_states_actions[:self.horizon*self.num_states][::3] = \
+                np.linspace(self.start[0], self.goal[0], self.horizon)
 
             # Initializing y
-            init_states_actions[3:self.horizon*self.num_states][1::3] = \
-                np.random.uniform(low=self.start[1]-5, high=self.start[1]+5,
-                                  size=((self.horizon-1),))
+            init_states_actions[:self.horizon*self.num_states][1::3] = \
+                np.linspace(self.start[1], self.goal[1], self.horizon)
 
             # Initializing theta
-            init_states_actions[3:self.horizon*self.num_states][2::3] = \
-                np.random.uniform(low=-np.pi, high=np.pi,
-                                  size=((self.horizon-1),))
+            init_states_actions[:self.horizon*self.num_states][2::3] = \
+                np.linspace(self.start[2], self.goal[2], self.horizon)
 
             # Initializing acceleration
             init_states_actions[self.horizon*self.num_states:][::2] = \
