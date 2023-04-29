@@ -25,8 +25,8 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
     open = []
     closed = []
 
-    # h =  np.sqrt((goal_conf[0]-start_conf[0])**2 + (goal_conf[1]-start_conf[1])**2) # eucl dist
-    h = abs(goal_conf[0]-start_conf[0]) + abs(goal_conf[1]-start_conf[0])
+    h =  np.sqrt((goal_conf[0]-start_conf[0])**2 + (goal_conf[1]-start_conf[1])**2) # eucl dist
+    # h = abs(goal_conf[0]-start_conf[0]) + abs(goal_conf[1]-start_conf[0])
     g = 0
     f = g+h
     grid_discr[start_conf_discr[0]][start_conf_discr[1]] = (start_conf,f,None)  #(config,f value, parent conf)
@@ -78,8 +78,8 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
                 
 
                 sc_g = val.g + st_c # modify 1 with steering action cost
-                sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
-                # sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
+                # sc_h = abs(goal_conf[0]-sc_x) + abs(goal_conf[1]-sc_y)
+                sc_h = np.sqrt((goal_conf[0]-sc_x)**2 + (goal_conf[1]-sc_y)**2)
                 
                 sc_f = sc_g + sc_h 
 
