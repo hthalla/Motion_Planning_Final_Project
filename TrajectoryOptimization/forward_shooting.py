@@ -53,7 +53,7 @@ class ForwardShooting():
                     (obs['observation'][1] - self.goal[1])**2 +
                     (theta - self.goal[2])**2)
             total_cost += cost  # Cumulative sum of costs calculation
-            # self.env.render()
+            # self.env.render()  # To render while iteration
 
         return total_cost
 
@@ -62,9 +62,15 @@ class ForwardShooting():
         Minimizing the cost function considering the kinematic constraints.
         """
         if init_actions is None:  # Initializing the actions randomly
-            init_actions = np.random.uniform(low=0, high=1,
-                                             size=(self.horizon *
-                                                   self.num_actions,))
+            init_actions = np.zeros(shape=(self.horizon * self.num_actions,))
+
+            # Initializing acceleration (Dubins car model)
+            init_actions[::2] = np.random.uniform(low=0, high=1,
+                                                  size=(self.horizon,))
+
+            # Initializing steering
+            init_actions[1::2] = np.random.uniform(low=-1, high=1,
+                                                   size=(self.horizon,))
 
         res = minimize(fun=self.forward_shooting,
                        x0=init_actions,
