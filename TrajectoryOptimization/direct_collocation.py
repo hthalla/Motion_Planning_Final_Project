@@ -24,7 +24,7 @@ class DirectCollocation():
         self.start = start
         self.goal = goal
         self.markers = markers
-        self.bounds = (((0, 25), (0, 25), (-np.pi, np.pi))*self.horizon +
+        self.bounds = (((-31, 31), (-19, 19), (-np.pi, np.pi))*self.horizon +
                        ((0, 1), (-1, 1))*self.horizon)  # Dubins car model
 
     def env_reset(self) -> None:
