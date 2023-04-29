@@ -4,6 +4,7 @@ This module implements the forward shooting type trajectory optimization.
 import os
 import numpy as np
 import gymnasium as gym
+import math
 from scipy.optimize import minimize
 
 # Temporary fix to allow simulation while multiple runtime copies
@@ -47,9 +48,10 @@ class ForwardShooting():
         total_cost = 0
         for action in actions:
             obs, _, _, _, _ = self.env.step(action)
+            theta = math.atan2(obs['observation'][5], obs['observation'][4])
             cost = ((obs['observation'][0] - self.goal[0])**2 +
                     (obs['observation'][1] - self.goal[1])**2 +
-                    (obs['observation'][2] - self.goal[2])**2)
+                    (theta - self.goal[2])**2)
             total_cost += cost  # Cumulative sum of costs calculation
             # self.env.render()
 
@@ -85,9 +87,9 @@ class ForwardShooting():
 
 if __name__ == "__main__":
     park_env = gym.make("parking-v0")
-    start_pos = (5.0, 5.0, 0.0)
-    goal_pos = (25.0, 10.0, 0.0)
-    H = 15
+    start_pos = (5.0, 5.0, -np.pi/2)
+    goal_pos = (10.0, 1.0, 0)
+    H = 5
     traj_shooting = ForwardShooting(park_env, H, start_pos, goal_pos)
     opt_actions = traj_shooting.minimize_shooting()
     traj_shooting.simulate(opt_actions)
