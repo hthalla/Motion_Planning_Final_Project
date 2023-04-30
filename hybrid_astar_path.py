@@ -6,7 +6,7 @@ from hybrid_astar import *
 
 def hybrid_astar_path(veh_loc,start_config,goal_config):
     grid_dimension = [-35,-19,35,19]
-    cell_size = 0.5
+    cell_size = 1
     car_obj = car.Car()
 
     start_conf = start_config
