@@ -6,13 +6,14 @@ import numpy as np
 import gymnasium as gym
 from hybrid_astar_path import hybrid_astar_path
 from TrajectoryOptimization.direct_collocation import DirectCollocation
+from TrajectoryOptimization.forward_shooting import ForwardShooting
 
 env = gym.make("parking-parked-v0")
 env.configure({
     "screen_height": 600,
     "screen_width": 1200
 })
-env.reset(seed = 10)  # Ensuring we are getting the same scenario
+env.reset(seed=10)  # Ensuring we are getting the same scenario
 
 # The parked vehicles can be added with the below commands
 lane = ("a", "b", 0)
@@ -54,7 +55,7 @@ for i, veh in enumerate(veh_loc):
 path = hybrid_astar_path(veh_pos, start_conf, goal_conf)
 print(path)
 
-# %%
+# %%  Trajecctory optimization with direct collocation
 H = 3
 land_marks = path[1:]
 start_pos = np.array([-30.5, -17.5, np.pi/2.1])
@@ -81,14 +82,53 @@ while i < len(land_marks):
 
 opt_states_actions_ls = np.append(opt_states, opt_actions)
 traj_collocation.horizon = H * i
-traj_collocation.start = start_conf
-traj_collocation.env_reset()
 if traj_collocation.images:
-    VIDEO_NAME = 'animation.avi'
+    VIDEO_NAME = 'animation_collocation.avi'
     video = cv2.VideoWriter(VIDEO_NAME, 0, 1, (1200, 600))
     for image in traj_collocation.images:
         video.write(image)
     cv2.destroyAllWindows()
     video.release()
 
-print(opt_states_actions_ls)
+with open('OptStates_collocation.txt', 'w', encoding='UTF-8') as f:
+    f.write(str(opt_states))
+
+with open('OptActions_collocation.txt', 'w', encoding='UTF-8') as f:
+    f.write(str(opt_actions))
+
+with open('OptStatesActions_collocation.txt', 'w', encoding='UTF-8') as f:
+    f.write(str(opt_states_actions_ls))
+
+# %%  Trajectory optimization with forward shooting
+start_pos = ([-30.5, -17.5, np.pi/2.1])
+H = 3
+land_marks = path[1:]
+traj_shooting = ForwardShooting(env, H, start_pos,
+                                land_marks[0])
+
+opt_actions = np.array([])
+i = 0
+while i < len(land_marks):
+    traj_shooting.goal = land_marks[i]
+    traj_shooting.env_reset()
+    acts = traj_shooting.minimize_shooting()
+    opt_actions = np.append(opt_actions, acts)
+    pos = traj_shooting.env.road.vehicles[0]
+    traj_shooting.simulate(acts)
+    traj_shooting.start = (pos.position[0], pos.position[1],
+                           pos.heading)
+    i += 1
+
+traj_shooting.horizon = H * i
+traj_shooting.start = start_pos
+traj_shooting.env_reset()
+if traj_shooting.images:
+    VIDEO_NAME = 'animation_shooting.avi'
+    video = cv2.VideoWriter(VIDEO_NAME, 0, 1, (1200, 600))
+    for image in traj_shooting.images:
+        video.write(image)
+    cv2.destroyAllWindows()
+    video.release()
+
+with open('OptActions_shooting.txt', 'w', encoding='UTF-8') as f:
+    f.write(str(opt_actions))

@@ -38,9 +38,12 @@ class DirectCollocation():
         self.env.goal.position = np.array([self.goal[0],
                                            self.goal[1]])
 
-        # Setting the obstacle
-        self.env.road.vehicles[1].heading = np.pi/2
-        self.env.road.vehicles[1].position = np.array([2.0, 2.0])
+        try:
+            # Setting the obstacle
+            self.env.road.vehicles[1].heading = np.pi/2
+            self.env.road.vehicles[1].position = np.array([2.0, 2.0])
+        except IndexError:
+            pass
 
     def env_set_state(self, state) -> None:
         """
@@ -149,7 +152,7 @@ class DirectCollocation():
 
 
 if __name__ == "__main__":
-    park_env = gym.make("parking-v0")
+    park_env = gym.make("parking-parked-v0")
 
     # Start position
     start_pos = (-30.5, 17.5, -1.4959965017094252)
