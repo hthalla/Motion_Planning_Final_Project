@@ -34,7 +34,7 @@ class DirectCollocation():
         self.env.road.vehicles[0].position = np.array([self.start[0],
                                                        self.start[1]])
         # Setting the goal position
-        self.env.goal.heading = self.start[2]
+        self.env.goal.heading = self.goal[2]
         self.env.goal.position = np.array([self.goal[0],
                                            self.goal[1]])
 
