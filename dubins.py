@@ -185,13 +185,13 @@ def dubin_path(start, end):  ### Add the angle either in np or theta
     curvature = math.tan(np.deg2rad(30))/2
     px, py, pyaw, mode, clen = dubins_path_planning(start, end, curvature)
     
-    pyaw_2pi = []
-    for i in range(len(pyaw)):
-        if pyaw[i] < 0:
-            pyaw[i] += 2*math.pi
-        pyaw_2pi.append(pyaw[i])
+    # pyaw_2pi = []
+    # for i in range(len(pyaw)):
+    #     if pyaw[i] < 0:
+    #         pyaw[i] += 2*math.pi
+    #     pyaw_2pi.append(pyaw[i])
                     
-    path = list(zip(px, py, pyaw_2pi))
+    path = list(zip(px, py, pyaw))
     return path, len(path)
 
 # start = [0,0,0]

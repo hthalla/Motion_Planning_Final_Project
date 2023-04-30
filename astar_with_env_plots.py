@@ -62,7 +62,7 @@ for i in range(len(veh_loc)):
 
 # print(veh_pos)
 
-path = hybrid_astar_path_with_plots(veh_pos,start_conf,goal_conf)
+path = hybrid_astar_path(veh_pos,start_conf,goal_conf)
 
 print(path)
 # Outputs are as below
