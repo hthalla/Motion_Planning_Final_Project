@@ -1,14 +1,10 @@
 """
 This module implements the forward shooting type trajectory optimization.
 """
-import os
+import cv2
 import numpy as np
 import gymnasium as gym
 from scipy.optimize import minimize
-import math
-
-# Temporary fix to allow simulation while multiple runtime copies
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 class DirectCollocation():
@@ -16,14 +12,14 @@ class DirectCollocation():
     Finds the optimized actions to goal position based on Forward Shooting
     trajectory optimization algorithm.
     """
-    def __init__(self, env, horizon, markers, start, goal) -> None:
+    def __init__(self, env, horizon, start, goal) -> None:
         self.env = env
         self.horizon = horizon
         self.num_actions = 2  # Steering and acceleration
         self.num_states = 3  # x, y and heading
         self.start = start
         self.goal = goal
-        self.markers = markers
+        self.images = []
         self.bounds = (((-31, 31), (-19, 19), (-np.pi, np.pi))*self.horizon +
                        ((0, 1), (-1, 1))*self.horizon)  # Dubins car model
 
@@ -61,14 +57,12 @@ class DirectCollocation():
         actions = actions.reshape(self.horizon, self.num_actions)
         total_cost = 0
         for action in actions:
-            obs, _, done, _, _ = self.env.step(action)
-            theta = math.atan2(obs['observation'][5], obs['observation'][4])
-            cost = ((obs['observation'][0] - self.goal[0])**2 +
-                    (obs['observation'][1] - self.goal[1])**2 +
-                    (theta - self.goal[2])**2)
+            self.env.step(action)
+            cur_pos = self.env.road.vehicles[0]
+            cost = ((cur_pos.position[0] - self.goal[0])**2 +
+                    (cur_pos.position[1] - self.goal[1])**2 +
+                    (cur_pos.heading - self.goal[2])**2)
             total_cost += cost  # Cumulative sum of costs calculation
-            # self.env.render()
-        print(done, total_cost)
 
         return total_cost
 
@@ -80,9 +74,6 @@ class DirectCollocation():
             init_states_actions = np.zeros(shape=(self.horizon *
                                                   (self.num_states +
                                                    self.num_actions),))
-
-            # Initializing the start location
-            init_states_actions[:3] = np.array(list(self.start))
 
             # Initializing x
             init_states_actions[:self.horizon*self.num_states][::3] = \
@@ -129,11 +120,11 @@ class DirectCollocation():
         self.env_set_state(states[0])  # Setting the env with initial state
         for state, action in zip(states[1:self.horizon],
                                  actions[:(self.horizon-1)]):
-            obs, _, _, _, _ = self.env.step(action)
-            theta = math.atan2(obs['observation'][5], obs['observation'][4])
-            constraints += [state[0] - obs["observation"][0],
-                            state[1] - obs["observation"][1],
-                            state[2] - theta]
+            self.env.step(action)
+            cur_pos = self.env.road.vehicles[0]
+            constraints += [state[0] - cur_pos.position[0],
+                            state[1] - cur_pos.position[1],
+                            state[2] - cur_pos.heading]
             self.env_set_state(state)  # Setting state for next iter
 
         return np.array(constraints)
@@ -149,16 +140,72 @@ class DirectCollocation():
         actions = actions.reshape(self.horizon, self.num_actions)
         for action in actions:
             self.env.step(action)
-            self.env.render()
+        img = self.env.render()
+        self.images += [img]
 
 
 if __name__ == "__main__":
     park_env = gym.make("parking-v0")
-    start_pos = (5.0, 5.0, -np.pi/2)
-    goal_pos = (10.0, 1.0, 0)
-    land_marks = [(10.0, 5.0, 0.0), (15.0, 3.0, 0.0)]  # For future use
+
+    # Start position
+    start_pos = (-30.5, 17.5, -1.4959965017094252)
     H = 5
-    traj_collocation = DirectCollocation(park_env, H, land_marks,
-                                         start_pos, goal_pos)
-    opt_states_actions = traj_collocation.minimize_collocation()
-    traj_collocation.simulate(opt_states_actions)
+
+    # Sample trajectory
+    land_marks = [(-30.5, 17.5, -1.4959965017094252),
+                  (-30.35053981, 15.505592, -1.495996),
+                  (-30.87578469, 13.617033, -2.188816),
+                  (-31.40233787, 11.728838, -1.495996),
+                  (-30.60148439, 9.9396562, -0.803176),
+                  (-28.84250145, 9.0744872, -0.110355),
+                  (-26.85466751, 8.8542232, -0.110355),
+                  (-24.86683357, 8.6339592, -0.110355),
+                  (-22.87899963, 8.4136952, -0.110355),
+                  (-20.89116569, 8.1934312, -0.110355),
+                  (-18.90333175, 7.9731672, -0.110355),
+                  (-16.91549781, 7.7529033, -0.110355),
+                  (-14.92766387, 7.5326393, -0.110355),
+                  (-12.93982993, 7.3123753, -0.110355),
+                  (-10.95199599, 7.0921113, -0.110355),
+                  (-8.964162060, 6.8718473, -0.110355),
+                  (-6.976328120, 6.6515833, -0.110355),
+                  (-4.988494180, 6.4313193, -0.110355),
+                  (-3.000660241, 6.2110553, -0.110355),
+                  (-1.241078319, 5.3471052, -0.803176),
+                  (0.5179046181, 4.4819362, -0.110355),
+                  (2.4239419219, 4.9397136, 0.5824644),
+                  (2.4239419219, 4.9397136, 0.5824644)]
+
+    traj_collocation = DirectCollocation(park_env, H,
+                                         start_pos, land_marks[0])
+
+    opt_states = np.array([])
+    opt_actions = np.array([])
+    i = 0
+    while i < len(land_marks):
+        traj_collocation.goal = land_marks[i]
+        traj_collocation.env_reset()
+        opt_states_actions = traj_collocation.minimize_collocation()
+        (sts, acts) = (opt_states_actions[:H * 3],
+                       opt_states_actions[H * 3:])
+        opt_states = np.append(opt_states, sts)
+        opt_actions = np.append(opt_actions, acts)
+        pos = traj_collocation.env.road.vehicles[0]
+        traj_collocation.simulate(opt_states_actions)
+        traj_collocation.start = (pos.position[0], pos.position[1],
+                                  pos.heading)
+        i += 1
+
+    opt_states_actions_ls = np.append(opt_states, opt_actions)
+    traj_collocation.horizon = H * i
+    traj_collocation.start = start_pos
+    traj_collocation.env_reset()
+    if traj_collocation.images:
+        VIDEO_NAME = 'animation.avi'
+        video = cv2.VideoWriter(VIDEO_NAME, 0, 1, (600, 300))
+        for image in traj_collocation.images:
+            video.write(image)
+        cv2.destroyAllWindows()
+        video.release()
+
+    # traj_collocation.simulate(opt_states_actions_ls)
