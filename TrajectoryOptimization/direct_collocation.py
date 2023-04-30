@@ -28,7 +28,7 @@ class DirectCollocation():
         Resets the env with respect to start and goal position.
         """
         # Resetting complete environment
-        self.env.reset()
+        self.env.reset(seed=10)
         # Setting the start position
         self.env.road.vehicles[0].heading = self.start[2]
         self.env.road.vehicles[0].position = np.array([self.start[0],
@@ -37,6 +37,10 @@ class DirectCollocation():
         self.env.goal.heading = self.goal[2]
         self.env.goal.position = np.array([self.goal[0],
                                            self.goal[1]])
+
+        # Setting the obstacle
+        self.env.road.vehicles[1].heading = np.pi/2
+        self.env.road.vehicles[1].position = np.array([2.0, 2.0])
 
     def env_set_state(self, state) -> None:
         """
