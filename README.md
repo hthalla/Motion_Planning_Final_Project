@@ -21,6 +21,13 @@ integrated.py: This file is to be primarily run. The outputs are the text files 
     
     **direct_collocation.py**: this module implements the direct collocation type trajectory optimization.
 
+* #### Outputs
+    **Hybrid A star with Forward Shooting**
+    ![ForwardShooting](Outputs/animation_shooting.gif)
+
+    **Hybrid A star with Direct Collocation**
+    ![DirectCollocation](Outputs/animation_collocation.gif)
+
 #### Dependencies:
 * highway_env
 * gymnasium
