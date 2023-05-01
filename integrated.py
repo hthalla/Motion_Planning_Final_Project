@@ -84,21 +84,18 @@ while i < len(land_marks):
 opt_states_actions_ls = np.append(opt_states, opt_actions)
 traj_collocation.horizon = H * i
 if traj_collocation.images:
-    VIDEO_NAME = 'Videos/animation_collocation.avi'
+    VIDEO_NAME = 'Outputs/animation_collocation.avi'
     video = cv2.VideoWriter(VIDEO_NAME, 0, 1, (1200, 600))
     for image in traj_collocation.images:
         video.write(image)
     cv2.destroyAllWindows()
     video.release()
 
-with open('OptStates_collocation.txt', 'w', encoding='UTF-8') as f:
+with open('Outputs/OptStates_collocation.txt', 'w', encoding='UTF-8') as f:
     f.write(str(opt_states))
 
-with open('OptActions_collocation.txt', 'w', encoding='UTF-8') as f:
+with open('Outputs/OptActions_collocation.txt', 'w', encoding='UTF-8') as f:
     f.write(str(opt_actions))
-
-with open('OptStatesActions_collocation.txt', 'w', encoding='UTF-8') as f:
-    f.write(str(opt_states_actions_ls))
 
 # %%  Trajectory optimization with forward shooting
 start_pos = ([-30.5, -17.5, np.pi/2.1])
@@ -124,12 +121,12 @@ traj_shooting.horizon = H * i
 traj_shooting.start = start_pos
 traj_shooting.env_reset()
 if traj_shooting.images:
-    VIDEO_NAME = 'Videos/animation_shooting.avi'
+    VIDEO_NAME = 'Outputs/animation_shooting.avi'
     video = cv2.VideoWriter(VIDEO_NAME, 0, 1, (1200, 600))
     for image in traj_shooting.images:
         video.write(image)
     cv2.destroyAllWindows()
     video.release()
 
-with open('OptActions_shooting.txt', 'w', encoding='UTF-8') as f:
+with open('Outputs/OptActions_shooting.txt', 'w', encoding='UTF-8') as f:
     f.write(str(opt_actions))
