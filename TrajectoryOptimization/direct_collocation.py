@@ -9,7 +9,7 @@ from scipy.optimize import minimize
 
 class DirectCollocation():
     """
-    Finds the optimized actions to goal position based on Forward Shooting
+    Finds the optimized actions to goal position based on Direct Collocation
     trajectory optimization algorithm.
     """
     def __init__(self, env, horizon, start, goal) -> None:
@@ -214,5 +214,3 @@ if __name__ == "__main__":
             video.write(image)
         cv2.destroyAllWindows()
         video.release()
-
-    # traj_collocation.simulate(opt_states_actions_ls)
