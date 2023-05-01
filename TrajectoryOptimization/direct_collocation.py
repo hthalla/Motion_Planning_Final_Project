@@ -1,5 +1,5 @@
 """
-This module implements the forward shooting type trajectory optimization.
+This module implements the direct collocation type trajectory optimization.
 """
 import cv2
 import numpy as np

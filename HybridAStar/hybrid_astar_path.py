@@ -1,13 +1,13 @@
 import numpy as np
-import car
-from utils import *
+from .car import Car
+from .utils import *
 import matplotlib.pyplot as plt
-from hybrid_astar import * 
+from .hybrid_astar import * 
 
 def hybrid_astar_path(veh_loc,start_config,goal_config):
     grid_dimension = [-35,-19,35,19]
     cell_size = 0.5
-    car_obj = car.Car()
+    car_obj = Car()
 
     start_conf = start_config
     start_conf[1] = -start_config[1]

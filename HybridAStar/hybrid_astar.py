@@ -1,6 +1,6 @@
-from utils import *
-import grid
-from dubins import *
+from .utils import *
+from .grid import Grid
+from .dubins import *
 
 def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
     """
@@ -11,7 +11,7 @@ def hybrid_astar(grid_dim,cell_size,start_conf,goal_conf,car,obs):
     closed_list = OrderedSet()
     init_node = start_conf
     cur_node = init_node
-    grid_env = grid.Grid(grid_dim,cell_size)
+    grid_env = Grid(grid_dim,cell_size)
     grid_discr = grid_env.make_grid()
     # print('discritized grid size:',len(grid_discr),len(grid_discr[0]))
     
